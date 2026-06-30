@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Variant 8 New Composition Playground</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      body {
+        background: linear-gradient(145deg, #f9f4e9 0%, #e7f3f4 48%, #b8dce5 100%);
+      }
+
+      .compose-page {
+        min-height: 100vh;
+        padding: 124px clamp(18px, 4vw, 56px) 44px;
+      }
+
+      .compose-toolbar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .compose-toolbar h1 {
+        max-width: none;
+        color: var(--ink);
+        font-size: clamp(26px, 4vw, 42px);
+      }
+
+      .tool-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .tool-button {
+        min-height: 38px;
+        border: 1px solid rgba(19, 126, 150, 0.32);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--blue-dark);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        padding: 0 14px;
+      }
+
+      .tool-button:hover {
+        background: white;
+      }
+
+      .compose-stage {
+        position: relative;
+        min-height: min(70vw, 710px);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 28px 88px rgba(21, 49, 59, 0.2);
+        background:
+          linear-gradient(90deg, rgba(245, 250, 250, 0.82) 0%, rgba(245, 250, 250, 0.48) 31%, rgba(245, 250, 250, 0.05) 72%),
+          url("assets/map.jpg") center / cover no-repeat;
+        touch-action: none;
+      }
+
+      .compose-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(circle at 82% 28%, rgba(19, 126, 150, 0.13), transparent 0 22%),
+          radial-gradient(circle at 61% 73%, rgba(21, 49, 59, 0.16), transparent 0 27%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 42%);
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .compose-stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        background:
+          linear-gradient(rgba(19, 126, 150, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(19, 126, 150, 0.08) 1px, transparent 1px);
+        background-size: 5% 5%;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .compose-stage.show-grid::after {
+        opacity: 1;
+      }
+
+      .compose-item {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        transform: rotate(var(--r, 0deg)) scale(var(--sx, 1), var(--sy, 1));
+        cursor: grab;
+        user-select: none;
+      }
+
+      .compose-item:active {
+        cursor: grabbing;
+      }
+
+      .compose-item.selected {
+        outline: 2px solid var(--blue);
+        outline-offset: 5px;
+      }
+
+      .compose-title {
+        z-index: 6;
+        width: min(44vw, 540px);
+        height: auto;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(44px, 6vw, 82px);
+        font-weight: 500;
+        line-height: 0.94;
+        text-shadow: 0 2px 18px rgba(238, 248, 249, 0.86);
+      }
+
+      .compose-lead {
+        z-index: 6;
+        width: min(40vw, 560px);
+        height: auto;
+        color: #254a55;
+        font-size: clamp(18px, 2vw, 27px);
+        line-height: 1.35;
+        text-shadow: 0 1px 12px rgba(238, 248, 249, 0.94);
+      }
+
+      .compose-label {
+        z-index: 7;
+        display: grid;
+        align-content: center;
+        min-width: 120px;
+        min-height: 38px;
+        height: auto;
+        padding: 10px 12px;
+        border: 1px solid rgba(19, 126, 150, 0.24);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--blue-dark);
+        font-size: clamp(15px, 1.5vw, 20px);
+        font-weight: 850;
+        line-height: 1.1;
+        backdrop-filter: blur(12px);
+      }
+
+      .emerge-item {
+        z-index: 4;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        isolation: isolate;
+      }
+
+      .emerge-item::before {
+        content: "";
+        position: absolute;
+        inset: -9%;
+        z-index: 2;
+        background: url("assets/map.jpg") center / cover no-repeat;
+        opacity: 0.18;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .emerge-item::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        z-index: 3;
+        background:
+          radial-gradient(ellipse at 50% 50%, transparent 0 47%, rgba(238, 248, 249, 0.2) 69%, rgba(238, 248, 249, 0.86) 100%),
+          linear-gradient(135deg, rgba(238, 248, 249, 0.22), transparent 34%, rgba(21, 49, 59, 0.12));
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .emerge-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.84) contrast(1.08) sepia(0.08);
+        opacity: 0.9;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+        -webkit-mask-image: radial-gradient(ellipse at center, #000 0 53%, rgba(0, 0, 0, 0.76) 66%, rgba(0, 0, 0, 0.22) 82%, transparent 100%);
+        mask-image: radial-gradient(ellipse at center, #000 0 53%, rgba(0, 0, 0, 0.76) 66%, rgba(0, 0, 0, 0.22) 82%, transparent 100%);
+      }
+
+      .emerge-item.book img {
+        object-fit: contain;
+        filter: saturate(0.72) contrast(1.16) sepia(0.18);
+        opacity: 0.94;
+      }
+
+      .resize-handle,
+      .rotate-handle {
+        position: absolute;
+        z-index: 9;
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        background: var(--blue);
+        box-shadow: 0 4px 12px rgba(21, 49, 59, 0.24);
+      }
+
+      .emerge-item.selected .resize-handle,
+      .emerge-item.selected .rotate-handle {
+        display: block;
+      }
+
+      .resize-handle {
+        right: -9px;
+        bottom: -9px;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        cursor: nwse-resize;
+      }
+
+      .rotate-handle {
+        top: -38px;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        cursor: grab;
+        transform: translateX(-50%);
+      }
+
+      .rotate-handle::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 19px;
+        width: 1px;
+        height: 18px;
+        background: rgba(19, 126, 150, 0.55);
+      }
+
+      .compose-output {
+        width: 100%;
+        min-height: 118px;
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px solid rgba(19, 126, 150, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        color: #254a55;
+        font: 13px/1.45 Consolas, "Courier New", monospace;
+        resize: vertical;
+      }
+
+      [contenteditable="true"]:focus {
+        outline: 2px solid rgba(19, 126, 150, 0.7);
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 760px) {
+        .compose-toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .tool-actions {
+          justify-content: flex-start;
+        }
+
+        .compose-stage {
+          min-height: 1000px;
+        }
+
+        .compose-title,
+        .compose-lead {
+          width: 82vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav">
+      <a class="brand" href="index.html"><img src="assets/logo-mark.png" alt=""><span>Jewish Galicia and Bukovina Atlas</span></a>
+      <div class="nav-links" aria-label="Primary">
+        <a href="variant-8-new.html">Variant 8 New</a>
+      </div>
+    </nav>
+
+    <main class="compose-page">
+      <div class="compose-toolbar">
+        <h1>Variant 8 New Playground</h1>
+        <div class="tool-actions">
+          <button class="tool-button" type="button" data-action="grid">Grid</button>
+          <button class="tool-button" type="button" data-action="flip-x">Flip X</button>
+          <button class="tool-button" type="button" data-action="flip-y">Flip Y</button>
+          <button class="tool-button" type="button" data-action="reset">Reset</button>
+          <button class="tool-button" type="button" data-action="choose-folder">Choose prototypes folder</button>
+          <button class="tool-button" type="button" data-action="save">Save as HTML</button>
+        </div>
+      </div>
+
+      <section class="compose-stage" id="stage" aria-label="Variant 8 New composition playground">
+        <div class="compose-item compose-title" data-name="title" style="--x:4.3%; --y:11.5%; --w:42%; --h:auto; --r:0deg; --sx:1; --sy:1;" contenteditable="true">Jewish Galicia and Bukovina Atlas</div>
+        <div class="compose-item compose-lead" data-name="lead" style="--x:4.3%; --y:55%; --w:38%; --h:auto; --r:0deg; --sx:1; --sy:1;" contenteditable="true">Stories of cities, communities, and people - from flourishing life to catastrophe and the return of memory.</div>
+
+        <div class="compose-item emerge-item" data-name="past-image" style="--x:68%; --y:7%; --w:24%; --h:56%; --r:3deg; --sx:1; --sy:1;">
+          <img src="assets/yom-kippur.jpg" alt="">
+          <button class="resize-handle" type="button" aria-label="Resize"></button>
+          <button class="rotate-handle" type="button" aria-label="Rotate"></button>
+        </div>
+        <div class="compose-item compose-label" data-name="past-label" style="--x:66%; --y:7%; --w:16%; --h:auto; --r:0deg; --sx:1; --sy:1;" contenteditable="true">Great Past</div>
+
+        <div class="compose-item emerge-item" data-name="destruction-image" style="--x:45%; --y:58%; --w:38%; --h:31%; --r:-2deg; --sx:1; --sy:1;">
+          <img src="assets/youth-photo.jpg" alt="">
+          <button class="resize-handle" type="button" aria-label="Resize"></button>
+          <button class="rotate-handle" type="button" aria-label="Rotate"></button>
+        </div>
+        <div class="compose-item compose-label" data-name="destruction-label" style="--x:43%; --y:51%; --w:15%; --h:auto; --r:0deg; --sx:1; --sy:1;" contenteditable="true">Destruction</div>
+
+        <div class="compose-item emerge-item book" data-name="renewal-image" style="--x:84%; --y:56%; --w:13%; --h:36%; --r:1deg; --sx:1; --sy:1;">
+          <img src="assets/book-page.png" alt="">
+          <button class="resize-handle" type="button" aria-label="Resize"></button>
+          <button class="rotate-handle" type="button" aria-label="Rotate"></button>
+        </div>
+        <div class="compose-item compose-label" data-name="renewal-label" style="--x:78%; --y:88%; --w:14%; --h:auto; --r:0deg; --sx:1; --sy:1;" contenteditable="true">Renewal</div>
+      </section>
+
+      <textarea class="compose-output" id="output" aria-label="Exported CSS" readonly></textarea>
+    </main>
+
+    <script>
+      const stage = document.querySelector("#stage");
+      const output = document.querySelector("#output");
+      const storageKey = "atlas-variant-8-new-compose-layout";
+      let prototypesDirectoryHandle = null;
+      let selected = null;
+      let interaction = null;
+
+      const defaults = new Map([...stage.querySelectorAll(".compose-item")].map((item) => [
+        item.dataset.name,
+        {
+          x: item.style.getPropertyValue("--x"),
+          y: item.style.getPropertyValue("--y"),
+          w: item.style.getPropertyValue("--w"),
+          h: item.style.getPropertyValue("--h"),
+          r: item.style.getPropertyValue("--r") || "0deg",
+          sx: item.style.getPropertyValue("--sx") || "1",
+          sy: item.style.getPropertyValue("--sy") || "1",
+          text: item.matches("[contenteditable]") ? item.textContent : ""
+        }
+      ]));
+
+      function numberFromPercent(value) {
+        return Number.parseFloat(value.replace("%", "")) || 0;
+      }
+
+      function numberFromDeg(value) {
+        return Number.parseFloat(value.replace("deg", "")) || 0;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function setSelected(item) {
+        if (selected) selected.classList.remove("selected");
+        selected = item;
+        if (selected) selected.classList.add("selected");
+      }
+
+      function saveLayout() {
+        const layout = [...stage.querySelectorAll(".compose-item")].map((item) => ({
+          name: item.dataset.name,
+          x: item.style.getPropertyValue("--x"),
+          y: item.style.getPropertyValue("--y"),
+          w: item.style.getPropertyValue("--w"),
+          h: item.style.getPropertyValue("--h"),
+          r: item.style.getPropertyValue("--r") || "0deg",
+          sx: item.style.getPropertyValue("--sx") || "1",
+          sy: item.style.getPropertyValue("--sy") || "1",
+          text: item.matches("[contenteditable]") ? item.textContent : ""
+        }));
+        localStorage.setItem(storageKey, JSON.stringify(layout));
+      }
+
+      function restoreLayout() {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return;
+        JSON.parse(raw).forEach((saved) => {
+          const item = stage.querySelector(`[data-name="${saved.name}"]`);
+          if (!item) return;
+          item.style.setProperty("--x", saved.x);
+          item.style.setProperty("--y", saved.y);
+          item.style.setProperty("--w", saved.w);
+          item.style.setProperty("--h", saved.h);
+          item.style.setProperty("--r", saved.r || "0deg");
+          item.style.setProperty("--sx", saved.sx || "1");
+          item.style.setProperty("--sy", saved.sy || "1");
+          if (item.matches("[contenteditable]")) item.textContent = saved.text;
+        });
+      }
+
+      function exportCss() {
+        const lines = [...stage.querySelectorAll(".compose-item")].map((item) => {
+          const name = item.dataset.name;
+          const x = item.style.getPropertyValue("--x");
+          const y = item.style.getPropertyValue("--y");
+          const w = item.style.getPropertyValue("--w");
+          const h = item.style.getPropertyValue("--h");
+          const r = item.style.getPropertyValue("--r") || "0deg";
+          const sx = item.style.getPropertyValue("--sx") || "1";
+          const sy = item.style.getPropertyValue("--sy") || "1";
+          return `[data-name="${name}"] { left: ${x}; top: ${y}; width: ${w}; height: ${h}; transform: rotate(${r}) scale(${sx}, ${sy}); }`;
+        });
+        output.value = lines.join("\n");
+      }
+
+      function normalizeFileName(name) {
+        return name
+          .trim()
+          .replace(/\.html$/i, "")
+          .replace(/[\\/:*?"<>|]+/g, "-")
+          .replace(/\s+/g, "-")
+          .toLowerCase();
+      }
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]);
+      }
+
+      function cssForSavedVariant() {
+        return [...stage.querySelectorAll(".compose-item")].map((item) => {
+          const name = item.dataset.name;
+          const x = item.style.getPropertyValue("--x");
+          const y = item.style.getPropertyValue("--y");
+          const w = item.style.getPropertyValue("--w");
+          const h = item.style.getPropertyValue("--h");
+          const r = item.style.getPropertyValue("--r") || "0deg";
+          const sx = item.style.getPropertyValue("--sx") || "1";
+          const sy = item.style.getPropertyValue("--sy") || "1";
+          return `.variant-8-new-saved [data-name="${name}"] { --x: ${x}; --y: ${y}; --w: ${w}; --h: ${h}; --r: ${r}; --sx: ${sx}; --sy: ${sy}; }`;
+        }).join("\n");
+      }
+
+      function savedVariantHtml(title) {
+        const titleText = stage.querySelector('[data-name="title"]').textContent.trim();
+        const leadText = stage.querySelector('[data-name="lead"]').textContent.trim();
+        const pastLabel = stage.querySelector('[data-name="past-label"]').textContent.trim();
+        const destructionLabel = stage.querySelector('[data-name="destruction-label"]').textContent.trim();
+        const renewalLabel = stage.querySelector('[data-name="renewal-label"]').textContent.trim();
+
+        return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(title)} - Jewish Galicia and Bukovina Atlas</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .variant-8-new-saved {
+        position: relative;
+        min-height: 710px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 28px 88px rgba(21, 49, 59, 0.2);
+        background:
+          linear-gradient(90deg, rgba(245, 250, 250, 0.82) 0%, rgba(245, 250, 250, 0.48) 31%, rgba(245, 250, 250, 0.05) 72%),
+          url("assets/map.jpg") center / cover no-repeat;
+      }
+
+      .variant-8-new-saved::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(circle at 82% 28%, rgba(19, 126, 150, 0.13), transparent 0 22%),
+          radial-gradient(circle at 61% 73%, rgba(21, 49, 59, 0.16), transparent 0 27%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 42%);
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .variant-8-new-saved [data-name] {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        transform: rotate(var(--r, 0deg)) scale(var(--sx, 1), var(--sy, 1));
+      }
+
+      .saved-title {
+        z-index: 6;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(44px, 6vw, 82px);
+        font-weight: 500;
+        line-height: 0.94;
+        text-shadow: 0 2px 18px rgba(238, 248, 249, 0.86);
+      }
+
+      .saved-lead {
+        z-index: 6;
+        color: #254a55;
+        font-size: clamp(18px, 2vw, 27px);
+        line-height: 1.35;
+        text-shadow: 0 1px 12px rgba(238, 248, 249, 0.94);
+      }
+
+      .saved-label {
+        z-index: 7;
+        display: grid;
+        align-content: center;
+        min-width: 120px;
+        min-height: 38px;
+        padding: 10px 12px;
+        border: 1px solid rgba(19, 126, 150, 0.24);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--blue-dark);
+        font-size: clamp(15px, 1.5vw, 20px);
+        font-weight: 850;
+        line-height: 1.1;
+        backdrop-filter: blur(12px);
+      }
+
+      .saved-emerge {
+        z-index: 4;
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      .saved-emerge::before {
+        content: "";
+        position: absolute;
+        inset: -9%;
+        z-index: 2;
+        background: url("assets/map.jpg") center / cover no-repeat;
+        opacity: 0.18;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .saved-emerge::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        z-index: 3;
+        background:
+          radial-gradient(ellipse at 50% 50%, transparent 0 47%, rgba(238, 248, 249, 0.2) 69%, rgba(238, 248, 249, 0.86) 100%),
+          linear-gradient(135deg, rgba(238, 248, 249, 0.22), transparent 34%, rgba(21, 49, 59, 0.12));
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .saved-emerge img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.84) contrast(1.08) sepia(0.08);
+        opacity: 0.9;
+        mix-blend-mode: multiply;
+        -webkit-mask-image: radial-gradient(ellipse at center, #000 0 53%, rgba(0, 0, 0, 0.76) 66%, rgba(0, 0, 0, 0.22) 82%, transparent 100%);
+        mask-image: radial-gradient(ellipse at center, #000 0 53%, rgba(0, 0, 0, 0.76) 66%, rgba(0, 0, 0, 0.22) 82%, transparent 100%);
+      }
+
+      .saved-emerge.book img {
+        object-fit: contain;
+        filter: saturate(0.72) contrast(1.16) sepia(0.18);
+        opacity: 0.94;
+      }
+
+      ${cssForSavedVariant()}
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav">
+      <a class="brand" href="index.html"><img src="assets/logo-mark.png" alt=""><span>Jewish Galicia and Bukovina Atlas</span></a>
+      <div class="reader-badge"><b>For readers, students, and researchers.</b>The atlas turns archival fragments into routes through towns, lives, and memory.</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="#">Article Catalog</a>
+        <a href="#">Holocaust Map</a>
+        <a href="#">Renewal Map</a>
+      </div>
+    </nav>
+    <main class="hero v7">
+      <section class="variant-8-new-saved" aria-label="Homepage">
+        <div class="saved-title" data-name="title">${escapeHtml(titleText)}</div>
+        <div class="saved-lead" data-name="lead">${escapeHtml(leadText)}</div>
+        <div class="saved-emerge" data-name="past-image"><img src="assets/yom-kippur.jpg" alt=""></div>
+        <div class="saved-label" data-name="past-label">${escapeHtml(pastLabel)}</div>
+        <div class="saved-emerge" data-name="destruction-image"><img src="assets/youth-photo.jpg" alt=""></div>
+        <div class="saved-label" data-name="destruction-label">${escapeHtml(destructionLabel)}</div>
+        <div class="saved-emerge book" data-name="renewal-image"><img src="assets/book-page.png" alt=""></div>
+        <div class="saved-label" data-name="renewal-label">${escapeHtml(renewalLabel)}</div>
+      </section>
+    </main>
+  </body>
+</html>
+`;
+      }
+
+      async function choosePrototypesFolder() {
+        if (!("showDirectoryPicker" in window)) {
+          output.value = "This browser cannot save directly into the prototypes folder. Open this page in Chrome or Edge.";
+          return null;
+        }
+
+        prototypesDirectoryHandle = await window.showDirectoryPicker({
+          id: "atlas-prototypes",
+          mode: "readwrite",
+          startIn: "documents"
+        });
+        output.value = `Selected folder: ${prototypesDirectoryHandle.name}. Save as HTML will write new files there.`;
+        return prototypesDirectoryHandle;
+      }
+
+      async function saveAsVariant() {
+        const rawName = prompt("Variant file name", "variant-8-new-custom");
+        if (!rawName) return;
+        const fileBase = normalizeFileName(rawName);
+        if (!fileBase) return;
+        const directory = prototypesDirectoryHandle || await choosePrototypesFolder();
+        if (!directory) return;
+
+        const fileName = `${fileBase}.html`;
+        const fileHandle = await directory.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(savedVariantHtml(fileBase));
+        await writable.close();
+        output.value = `Saved ${fileName} into ${directory.name}.`;
+      }
+
+      restoreLayout();
+      exportCss();
+
+      stage.addEventListener("pointerdown", (event) => {
+        const item = event.target.closest(".compose-item");
+        if (!item) return;
+        setSelected(item);
+        item.setPointerCapture(event.pointerId);
+        const bounds = stage.getBoundingClientRect();
+        const rect = item.getBoundingClientRect();
+        const action = event.target.classList.contains("resize-handle")
+          ? "resize"
+          : event.target.classList.contains("rotate-handle")
+            ? "rotate"
+            : "move";
+
+        interaction = {
+          action,
+          item,
+          bounds,
+          rect,
+          startX: event.clientX,
+          startY: event.clientY,
+          baseX: numberFromPercent(item.style.getPropertyValue("--x")),
+          baseY: numberFromPercent(item.style.getPropertyValue("--y")),
+          baseW: numberFromPercent(item.style.getPropertyValue("--w")),
+          baseH: numberFromPercent(item.style.getPropertyValue("--h")),
+          baseR: numberFromDeg(item.style.getPropertyValue("--r") || "0deg")
+        };
+      });
+
+      stage.addEventListener("pointermove", (event) => {
+        if (!interaction) return;
+        const dx = ((event.clientX - interaction.startX) / interaction.bounds.width) * 100;
+        const dy = ((event.clientY - interaction.startY) / interaction.bounds.height) * 100;
+
+        if (interaction.action === "move") {
+          interaction.item.style.setProperty("--x", `${clamp(interaction.baseX + dx, 0, 96).toFixed(2)}%`);
+          interaction.item.style.setProperty("--y", `${clamp(interaction.baseY + dy, 0, 96).toFixed(2)}%`);
+        }
+
+        if (interaction.action === "resize") {
+          interaction.item.style.setProperty("--w", `${clamp(interaction.baseW + dx, 5, 70).toFixed(2)}%`);
+          interaction.item.style.setProperty("--h", `${clamp(interaction.baseH + dy, 5, 80).toFixed(2)}%`);
+        }
+
+        if (interaction.action === "rotate") {
+          const centerX = interaction.rect.left + interaction.rect.width / 2;
+          const centerY = interaction.rect.top + interaction.rect.height / 2;
+          const startAngle = Math.atan2(interaction.startY - centerY, interaction.startX - centerX);
+          const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+          const delta = (currentAngle - startAngle) * 180 / Math.PI;
+          interaction.item.style.setProperty("--r", `${(interaction.baseR + delta).toFixed(1)}deg`);
+        }
+
+        exportCss();
+      });
+
+      stage.addEventListener("pointerup", () => {
+        if (!interaction) return;
+        interaction = null;
+        saveLayout();
+      });
+
+      stage.addEventListener("input", saveLayout);
+
+      document.addEventListener("keydown", (event) => {
+        if (!selected || document.activeElement.matches("[contenteditable]")) return;
+        const step = event.shiftKey ? 1 : 0.25;
+        const keyMap = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+        if (!keyMap[event.key]) return;
+        event.preventDefault();
+        const [dx, dy] = keyMap[event.key];
+        selected.style.setProperty("--x", `${numberFromPercent(selected.style.getPropertyValue("--x")) + dx}%`);
+        selected.style.setProperty("--y", `${numberFromPercent(selected.style.getPropertyValue("--y")) + dy}%`);
+        saveLayout();
+        exportCss();
+      });
+
+      function flipSelected(axis) {
+        if (!selected || !selected.classList.contains("emerge-item")) {
+          output.value = "Select an image first, then use Flip X or Flip Y.";
+          return;
+        }
+        const property = axis === "x" ? "--sx" : "--sy";
+        const current = Number.parseFloat(selected.style.getPropertyValue(property) || "1");
+        selected.style.setProperty(property, String(current === -1 ? 1 : -1));
+        saveLayout();
+        exportCss();
+      }
+
+      document.querySelector("[data-action='grid']").addEventListener("click", () => {
+        stage.classList.toggle("show-grid");
+      });
+
+      document.querySelector("[data-action='reset']").addEventListener("click", () => {
+        localStorage.removeItem(storageKey);
+        defaults.forEach((value, name) => {
+          const item = stage.querySelector(`[data-name="${name}"]`);
+          item.style.setProperty("--x", value.x);
+          item.style.setProperty("--y", value.y);
+          item.style.setProperty("--w", value.w);
+          item.style.setProperty("--h", value.h);
+          item.style.setProperty("--r", value.r);
+          item.style.setProperty("--sx", value.sx);
+          item.style.setProperty("--sy", value.sy);
+          if (item.matches("[contenteditable]")) item.textContent = value.text;
+        });
+        exportCss();
+      });
+
+      document.querySelector("[data-action='flip-x']").addEventListener("click", () => flipSelected("x"));
+      document.querySelector("[data-action='flip-y']").addEventListener("click", () => flipSelected("y"));
+      document.querySelector("[data-action='choose-folder']").addEventListener("click", () => {
+        choosePrototypesFolder().catch((error) => {
+          output.value = `Folder selection failed: ${error.message}`;
+        });
+      });
+      document.querySelector("[data-action='save']").addEventListener("click", () => {
+        saveAsVariant().catch((error) => {
+          output.value = `Save failed: ${error.message}`;
+        });
+      });
+    </script>
+  </body>
+</html>

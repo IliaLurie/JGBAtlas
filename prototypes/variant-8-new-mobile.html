@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Variant 8 new mobile - Jewish Galicia and Bukovina Atlas</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .variant-8-new-mobile {
+        position: relative;
+        min-height: 710px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 28px 88px rgba(21, 49, 59, 0.2);
+        background:
+          linear-gradient(90deg, rgba(245, 250, 250, 0.82) 0%, rgba(245, 250, 250, 0.48) 31%, rgba(245, 250, 250, 0.05) 72%),
+          url("assets/map.jpg") center / cover no-repeat;
+      }
+
+      .variant-8-new-mobile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(circle at 82% 28%, rgba(19, 126, 150, 0.13), transparent 0 22%),
+          radial-gradient(circle at 61% 73%, rgba(21, 49, 59, 0.16), transparent 0 27%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 42%);
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .variant-8-new-mobile [data-name] {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        transform: rotate(var(--r, 0deg)) scale(var(--sx, 1), var(--sy, 1));
+      }
+
+      .mobile-title {
+        z-index: 8;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(44px, 6vw, 82px);
+        font-weight: 500;
+        line-height: 0.94;
+        text-shadow: 0 2px 18px rgba(238, 248, 249, 0.86);
+      }
+
+      .mobile-lead {
+        z-index: 8;
+        color: #254a55;
+        font-size: clamp(18px, 2vw, 27px);
+        line-height: 1.35;
+        text-shadow: 0 1px 12px rgba(238, 248, 249, 0.94);
+      }
+
+      .mobile-label {
+        z-index: 7;
+        display: grid;
+        align-content: center;
+        min-width: 120px;
+        min-height: 38px;
+        padding: 10px 12px;
+        border: 1px solid rgba(19, 126, 150, 0.24);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--blue-dark);
+        font-size: clamp(15px, 1.5vw, 20px);
+        font-weight: 850;
+        line-height: 1.1;
+        opacity: 0;
+        backdrop-filter: blur(12px);
+        animation: labelCycle 18s ease-in-out infinite both;
+      }
+
+      .mobile-emerge {
+        z-index: 4;
+        overflow: hidden;
+        isolation: isolate;
+        opacity: 0;
+        animation: imageCycle 18s ease-in-out infinite both;
+      }
+
+      .mobile-emerge::before {
+        content: "";
+        position: absolute;
+        inset: -9%;
+        z-index: 2;
+        background: url("assets/map.jpg") center / cover no-repeat;
+        opacity: 0.18;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .mobile-emerge::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        z-index: 3;
+        background:
+          radial-gradient(ellipse at 50% 50%, transparent 0 47%, rgba(238, 248, 249, 0.2) 69%, rgba(238, 248, 249, 0.86) 100%),
+          linear-gradient(135deg, rgba(238, 248, 249, 0.22), transparent 34%, rgba(21, 49, 59, 0.12));
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .mobile-emerge img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.78) contrast(0.96) sepia(0.12) blur(9px);
+        opacity: 0.92;
+        mix-blend-mode: multiply;
+        -webkit-mask-image: radial-gradient(ellipse at center, #000 0 49%, rgba(0, 0, 0, 0.68) 65%, rgba(0, 0, 0, 0.2) 82%, transparent 100%);
+        mask-image: radial-gradient(ellipse at center, #000 0 49%, rgba(0, 0, 0, 0.68) 65%, rgba(0, 0, 0, 0.2) 82%, transparent 100%);
+        animation: focusCycle 18s ease-in-out infinite both;
+      }
+
+      .mobile-emerge.book img {
+        object-fit: contain;
+      }
+
+      .mobile-emerge.past,
+      .mobile-label.past {
+        animation-delay: 0s;
+      }
+
+      .mobile-emerge.past img {
+        animation-delay: 0s;
+      }
+
+      .mobile-emerge.destruction,
+      .mobile-label.destruction {
+        animation-delay: 6s;
+      }
+
+      .mobile-emerge.destruction img {
+        animation-delay: 6s;
+      }
+
+      .mobile-emerge.renewal,
+      .mobile-label.renewal {
+        animation-delay: 12s;
+      }
+
+      .mobile-emerge.renewal img {
+        animation-delay: 12s;
+      }
+
+      .variant-8-new-mobile [data-name="title"] { --x: 4.3%; --y: 11.5%; --w: 42%; --h: auto; --r: 0deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="lead"] { --x: 4.3%; --y: 55%; --w: 38%; --h: auto; --r: 0deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="past-image"] { --x: 67.46%; --y: 5.30%; --w: 24%; --h: 56%; --r: 3deg; --sx: -1; --sy: 1; }
+      .variant-8-new-mobile [data-name="past-label"] { --x: 76.79%; --y: 65.31%; --w: 16%; --h: auto; --r: 0deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="destruction-image"] { --x: 36.92%; --y: 65.74%; --w: 38%; --h: 31%; --r: -2deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="destruction-label"] { --x: 76.88%; --y: 73.54%; --w: 15%; --h: auto; --r: 0deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="renewal-image"] { --x: 52.70%; --y: 14.87%; --w: 13%; --h: 36%; --r: 1deg; --sx: 1; --sy: 1; }
+      .variant-8-new-mobile [data-name="renewal-label"] { --x: 77.59%; --y: 82.08%; --w: 14%; --h: auto; --r: 0deg; --sx: 1; --sy: 1; }
+
+      @keyframes imageCycle {
+        0%, 29%, 100% {
+          opacity: 0;
+        }
+
+        7%, 12% {
+          opacity: 0.36;
+        }
+
+        18%, 24% {
+          opacity: 0.96;
+        }
+      }
+
+      @keyframes focusCycle {
+        0%, 29%, 100% {
+          filter: saturate(0.72) contrast(0.92) sepia(0.16) blur(10px);
+        }
+
+        7%, 12% {
+          filter: saturate(0.82) contrast(1.02) sepia(0.12) blur(4px);
+        }
+
+        18%, 24% {
+          filter: saturate(0.95) contrast(1.18) sepia(0.06) blur(0);
+        }
+      }
+
+      @keyframes labelCycle {
+        0%, 29%, 100% {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+
+        12%, 24% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .variant-8-new-mobile {
+          min-height: 1000px;
+        }
+
+        .mobile-title {
+          font-size: clamp(38px, 12vw, 50px);
+        }
+
+        .variant-8-new-mobile [data-name="title"] { --x: 6%; --y: 9%; --w: 82%; --h: auto; }
+        .variant-8-new-mobile [data-name="lead"] { --x: 6%; --y: 31%; --w: 78%; --h: auto; }
+        .variant-8-new-mobile [data-name="past-image"] { --x: 44%; --y: 47%; --w: 50%; --h: 31%; }
+        .variant-8-new-mobile [data-name="past-label"] { --x: 8%; --y: 48%; --w: 36%; --h: auto; }
+        .variant-8-new-mobile [data-name="destruction-image"] { --x: 6%; --y: 60%; --w: 68%; --h: 22%; }
+        .variant-8-new-mobile [data-name="destruction-label"] { --x: 58%; --y: 82%; --w: 34%; --h: auto; }
+        .variant-8-new-mobile [data-name="renewal-image"] { --x: 56%; --y: 50%; --w: 30%; --h: 34%; }
+        .variant-8-new-mobile [data-name="renewal-label"] { --x: 8%; --y: 82%; --w: 36%; --h: auto; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mobile-emerge,
+        .mobile-emerge img,
+        .mobile-label {
+          animation: none;
+        }
+
+        .mobile-emerge.past,
+        .mobile-label.past {
+          opacity: 1;
+        }
+
+        .mobile-emerge.past img {
+          filter: saturate(0.95) contrast(1.18) sepia(0.06) blur(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav">
+      <a class="brand" href="index.html"><img src="assets/logo-mark.png" alt=""><span>Jewish Galicia and Bukovina Atlas</span></a>
+      <div class="reader-badge"><b>For readers, students, and researchers.</b>The atlas turns archival fragments into routes through towns, lives, and memory.</div>
+      <div class="nav-links" aria-label="Primary">
+        <a href="#">Article Catalog</a>
+        <a href="#">Holocaust Map</a>
+        <a href="#">Renewal Map</a>
+      </div>
+    </nav>
+    <main class="hero v7">
+      <section class="variant-8-new-mobile" aria-label="Homepage">
+        <div class="mobile-title" data-name="title">Jewish Galicia and Bukovina Atlas</div>
+        <div class="mobile-lead" data-name="lead">Stories of cities, communities, and people - from flourishing life to catastrophe and the return of memory.</div>
+        <div class="mobile-emerge past" data-name="past-image"><img src="assets/yom-kippur.jpg" alt=""></div>
+        <div class="mobile-label past" data-name="past-label">Great Past</div>
+        <div class="mobile-emerge destruction" data-name="destruction-image"><img src="assets/youth-photo.jpg" alt=""></div>
+        <div class="mobile-label destruction" data-name="destruction-label">Destruction</div>
+        <div class="mobile-emerge book renewal" data-name="renewal-image"><img src="assets/book-page.png" alt=""></div>
+        <div class="mobile-label renewal" data-name="renewal-label">Renewal</div>
+      </section>
+    </main>
+  </body>
+</html>
